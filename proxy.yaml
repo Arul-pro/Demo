@@ -1,5 +1,5 @@
 Name: install nginx
-Hosts: webservers
+Hosts: web
 Tasks:
   - name: install nginx
     apt:
