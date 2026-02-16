@@ -3,9 +3,12 @@ pipeline {
 
     environment {
         IMAGE_NAME = "demo"
+        DOCKERHUB_USER = "your-dockerhub-username"
+        DOCKER_IMAGE = "${DOCKERHUB_USER}/${IMAGE_NAME}"
     }
 
     stages {
+
         stage('Git Checkout') {
             steps {
                 git url: 'https://github.com/Arul-pro/Demo.git', branch: 'main'
@@ -15,9 +18,39 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                printenv
                 docker build -t ${IMAGE_NAME}:${GIT_COMMIT} .
-                docker run -d  -it -p 8081:8081 --name ${IMAGE_NAME} ${IMAGE_NAME}:${GIT_COMMIT}
+                '''
+            }
+        }
+
+        stage('Tag Docker Image') {
+            steps {
+                sh '''
+                docker tag ${IMAGE_NAME}:${GIT_COMMIT} ${DOCKER_IMAGE}:${GIT_COMMIT}
+                docker tag ${IMAGE_NAME}:${GIT_COMMIT} ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-cred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh '''
+                docker push ${DOCKER_IMAGE}:${GIT_COMMIT}
+                docker push ${DOCKER_IMAGE}:latest
                 '''
             }
         }
