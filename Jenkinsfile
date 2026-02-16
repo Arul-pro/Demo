@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "demo"
-        DOCKERHUB_USER = "your-dockerhub-username"
+        DOCKERHUB_USER = "arulgun"
         DOCKER_IMAGE = "${DOCKERHUB_USER}/${IMAGE_NAME}"
     }
 
