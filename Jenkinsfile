@@ -5,6 +5,8 @@ pipeline {
         IMAGE_NAME = "demo"
         DOCKERHUB_USER = "arulgun"
         DOCKER_IMAGE = "${DOCKERHUB_USER}/${IMAGE_NAME}"
+        INVENTORY = "/home/jenkins/inventory.ini"     // change path
+        PLAYBOOK = "/home/jenkins/deploy.yml"         // change path
     }
 
     stages {
@@ -22,8 +24,6 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
-                    // SECURE way (NO Groovy interpolation)
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
@@ -53,6 +53,14 @@ pipeline {
                 sh '''
                     docker push ${DOCKER_IMAGE}:${GIT_COMMIT}
                     docker push ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Deploy to Target Server (Ansible)') {
+            steps {
+                sh '''
+                    ansible-playbook -i ${INVENTORY} ${PLAYBOOK}
                 '''
             }
         }
